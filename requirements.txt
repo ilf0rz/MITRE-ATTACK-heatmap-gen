@@ -1,0 +1,11 @@
+antlr4-python3-runtime
+certifi
+charset-normalizer
+idna
+pytz
+requests
+simplejson
+six
+stix2
+stix2-patterns
+urllib3
