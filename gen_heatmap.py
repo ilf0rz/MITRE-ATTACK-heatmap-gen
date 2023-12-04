@@ -44,12 +44,7 @@ def main():
 
     print('[+] The following verticals have been selected:')
     groups = []
-    
-    import debugpy
-    debugpy.listen(("127.0.0.1", 5678))
-    debugpy.wait_for_client()
-    debugpy.breakpoint()
-    
+      
     for vertical in verticals:
         print(f'[-] {vertical.capitalize()}')
         if vertical != '*':
