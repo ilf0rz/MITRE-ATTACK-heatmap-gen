@@ -7,7 +7,7 @@ def get_related(thesrc, src_type, rel_type, target_type, reverse=False):
         Filter('type', '=', 'relationship'),
         Filter('relationship_type', '=', rel_type),
         Filter('revoked', '=', False),
-        #Filter('x_mitre_deprecated', "=", False)
+        Filter('x_mitre_deprecated', "=", False)
     ])
 
     # stix_id => [ { relationship, related_object_id } for each related object ]

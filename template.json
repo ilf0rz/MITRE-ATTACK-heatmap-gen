@@ -1,9 +1,9 @@
 {
 	"name": "layer",
 	"versions": {
-		"attack": "13",
-		"navigator": "4.8.2",
-		"layer": "4.4"
+		"attack": "14",
+		"navigator": "4.9.0",
+		"layer": "4.5"
 	},
 	"domain": "enterprise-attack",
 	"description": "",
@@ -29,7 +29,8 @@
 		"showID": false,
 		"showName": true,
 		"showAggregateScores": false,
-		"countUnscored": false
+		"countUnscored": false,
+		"expandedSubtechniques": "none"
 	},
 	"hideDisabled": false,
 	"techniques": [],
@@ -48,5 +49,6 @@
 	"showTacticRowBackground": false,
 	"tacticRowBackground": "#dddddd",
 	"selectTechniquesAcrossTactics": true,
-	"selectSubtechniquesWithParent": false
+	"selectSubtechniquesWithParent": false,
+	"selectVisibleTechniques": false
 }

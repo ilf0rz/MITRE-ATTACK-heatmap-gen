@@ -44,20 +44,31 @@ def main():
 
     print('[+] The following verticals have been selected:')
     groups = []
-
+    
+    import debugpy
+    debugpy.listen(("127.0.0.1", 5678))
+    debugpy.wait_for_client()
+    debugpy.breakpoint()
+    
     for vertical in verticals:
         print(f'[-] {vertical.capitalize()}')
-        groups += src.query([Filter("type", "=", "intrusion-set"),
-                             Filter("description", "contains", vertical)]
-                            )
-    deduped_groups = []
+        if vertical != '*':
+            groups += src.query([Filter("type", "=", "intrusion-set"),
+                                Filter("description", "contains", vertical),
+                                Filter('revoked', '=', False),
+                                Filter('x_mitre_deprecated', "=", False)])
+        else:
+            groups += src.query([Filter("type", "=", "intrusion-set"),
+                                 Filter('revoked', '=', False),
+                                 Filter('x_mitre_deprecated', "=", False)]) 
+
 
     print(f"[+] The following groups have been identified targeting: {', '.join(verticals)}")
-
+    deduped_groups = []
     # [deduped_groups.append(x) for x in groups if x not in deduped_groups]
-
+    
     for x in groups:
-        if x not in deduped_groups:
+        if x not in deduped_groups: # and not x['revoked'] and not x.get('x_mitre_deprecated',False):
             deduped_groups.append(x)
             print(f"[-] {x['name']}")
 
