@@ -25,6 +25,15 @@ def get_data_from_branch(domain):
     stix_json = requests.get(f"https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/{domain}/{domain}.json").json()
     return MemoryStore(stix_data=stix_json["objects"])
 
+def filter_scores(techniques,threshold):
+    filtered_techniques = []
+    for technique in techniques:
+        if '.' not in technique['techniqueID']:
+            if technique["score"] >= threshold:
+                filtered_techniques.append(technique)
+        else:
+            filtered_techniques.append(technique)
+    return filtered_techniques
 
 def main():
 
@@ -32,12 +41,16 @@ def main():
     parser.add_argument('-s', '--search', metavar='string', nargs='+', required=True, help='string to be searched in group\'s descrition for a match.')
     parser.add_argument('-o', '--outfile', metavar='string', required=True, help='output json file containing the generated heatmap.')
     parser.add_argument('-t', '--title', metavar='string', required=True, help='tab title for the current analysis.')
+    parser.add_argument('--merge-tech', default=True, action=argparse.BooleanOptionalAction, help='increase counter for main technique as well in case just a subtecnique is used (eg: if T1059.001 is used both T1059 and T1059.001 are added to the heatmap)')
+    parser.add_argument('--threshold', type=lambda x: int(x) if int(x) > 0 else argparse.ArgumentTypeError(f"{x} is not a positive integer"), required=False, help='a positive integer representing the threshold value')
 
     args = parser.parse_args()
 
     verticals = args.search
     outfile = args.outfile
     name = args.title
+    merge_tech = args.merge_tech if args.merge_tech else False
+    threshold = args.threshold if args.threshold else 0
 
     print('[+] Downloading latest version of MITRE ATT&CK')
     src = get_data_from_branch("enterprise-attack")
@@ -82,33 +95,42 @@ def main():
                                x['source_name'] == 'mitre-attack'][0]
                 for tactic in technique['object']['kill_chain_phases']:
                     t_name = tactic['phase_name']
-                    if (t_name,external_id) in appended_t:
-                        target = [x for x in allt['techniques'] if x['techniqueID'] == external_id and x['tactic'] == t_name]
-                        target[0]['score'] += 1
-                        if target[0]['score'] > max_score:
-                            max_score += 1
+                    to_p = []
+                    if '.' in external_id and merge_tech:
+                        main_id = external_id.split('.')[0]
+                        to_p.append(main_id)
+                    to_p.append(external_id)
+                    for proc in to_p:
+                        if (t_name,proc) in appended_t:
+                            target = [x for x in allt['techniques'] if x['techniqueID'] == proc and x['tactic'] == t_name]
+                            target[0]['score'] += 1
+                            if target[0]['score'] > max_score:
+                                max_score += 1
 
-                    else:
-                        new_t = deepcopy(tech)
-                        new_t['techniqueID'] = external_id
-                        new_t['tactic'] = t_name
-                        allt['techniques'].append(new_t)
-                        appended_t.append((t_name,external_id))
+                        else:
+                            new_t = deepcopy(tech)
+                            new_t['techniqueID'] = proc
+                            new_t['tactic'] = t_name
+                            allt['techniques'].append(new_t)
+                            appended_t.append((t_name,proc))
         else:
-            # print('\t# NO Techniques')
+            # print(f'# NO Techniques for gorup: {group['name']}')
             pass
-
+    
+    if threshold  != 0:
+        print(f'[+] Filtering out Techniques with score < {threshold}')
+        allt['techniques'] = filter_scores(allt['techniques'], threshold)
+    
     allt['name'] = name
     allt['gradient']['minValue'] = 1
     allt['gradient']['maxValue'] = max_score
+    
     try:
         with open(f'{path}/{outfile}.json','w') as f:
             f.write(json.dumps(allt,indent=4))
         print('[+] Processing done!')
     except Exception as e:
         print(f'[!] ERROR writing to file: {e}')
-
-
 
 
 if __name__ == '__main__':
