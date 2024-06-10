@@ -1,8 +1,8 @@
 {
 	"name": "layer",
 	"versions": {
-		"attack": "14",
-		"navigator": "4.9.0",
+		"attack": "15",
+		"navigator": "5.0.0",
 		"layer": "4.5"
 	},
 	"domain": "enterprise-attack",
